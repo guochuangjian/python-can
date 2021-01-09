@@ -20,10 +20,47 @@ try:
 except OSError as e:
     log.info("Load zlgcan library error!")
 
+zcan_dev_property = { 
+    ZCAN_USBCAN1:{"is_fd":False, "support_can":True, "support_resistance":False},
+    ZCAN_USBCAN2:{"is_fd":False, "support_can":True, "support_resistance":False},
+
+    ZCAN_USBCAN_E_U:{"is_fd":False, "support_can":True, "support_resistance":False},
+    ZCAN_USBCAN_2E_U:{"is_fd":False, "support_can":True, "support_resistance":False},
+    ZCAN_USBCAN_4E_U:{"is_fd":False, "support_can":True, "support_resistance":False},
+    ZCAN_USBCAN_8E_U:{"is_fd":False, "support_can":True, "support_resistance":False},
+
+    ZCAN_CANETTCP:{"is_fd":False, "support_resistance":False, "is_net_dev":True, "is_tcp":True},
+    ZCAN_WIFICAN_TCP:{"is_fd":False, "support_resistance":False, "is_net_dev":True, "is_tcp":True},
+
+    ZCAN_CANETUDP:{"is_fd":False, "support_resistance":False, "is_net_dev":True, "is_tcp":False},
+    ZCAN_WIFICAN_UDP:{"is_fd":False, "support_resistance":False, "is_net_dev":True, "is_tcp":False},
+
+    ZCAN_USBCANFD_100U:{"is_fd":True, "support_can":True, "support_resistance":True},
+    ZCAN_USBCANFD_200U:{"is_fd":True, "support_can":True, "support_resistance":True},
+    ZCAN_USBCANFD_MINI:{"is_fd":True, "support_can":True, "support_resistance":True},
+
+    ZCAN_PCIE_CANFD_100U:{"is_fd":True, "support_can":False, "support_resistance":False},
+    ZCAN_PCIE_CANFD_200U:{"is_fd":True, "support_can":False, "support_resistance":False},
+
+    ZCAN_CANDTU_100UR:{"is_fd":False, "support_resistance":True},
+    ZCAN_CANDTU_200UR:{"is_fd":False, "support_resistance":True},
+    
+    ZCAN_CANDTU_NET:{"is_fd":False, "support_resistance":False, "is_net_dev":True, "is_tcp":True},
+    ZCAN_CANDTU_NET_400:{"is_fd":False, "support_resistance":False, "is_net_dev":True, "is_tcp":True},
+
+    ZCAN_CANFDNET_TCP:{"is_fd":True, "support_resistance":False, "is_net_dev":True, "is_tcp":True},
+    ZCAN_CANFDWIFI_TCP:{"is_fd":True, "support_resistance":False, "is_net_dev":True, "is_tcp":True},
+    ZCAN_CANFDNET_400U_TCP:{"is_fd":True, "support_resistance":False, "is_net_dev":True, "is_tcp":True},
+
+    ZCAN_CANFDNET_UDP:{"is_fd":True, "support_resistance":False, "is_net_dev":True, "is_tcp":False},
+    ZCAN_CANFDWIFI_UDP:{"is_fd":True, "support_resistance":False, "is_net_dev":True, "is_tcp":False},
+    ZCAN_CANFDNET_400U_UDP:{"is_fd":True, "support_resistance":False, "is_net_dev":True, "is_tcp":True}
+}
+
 class ZlgcanBus(BusABC):
     def __init__(
         self,
-        channel,
+        channel = 0,
         device = ZCAN_USBCANFD_200U,
         device_index = 0,
         bitrate=500000,
@@ -36,57 +73,75 @@ class ZlgcanBus(BusABC):
         the ZLGCAN interface includes the :meth:`~can.interface.zcan.ZlgcanBus.SetValue`
         and :meth:`~can.interface.zcan.ZlgcanBus.GetValue methods.
 
-        :param str channel:
-            The can interface name. An example would be 'USBCANFD-200U'
-            Default is 'USBCANFD-200U'
-
-        :param can.bus.BusState state:
-            BusState of the channel.
-            Default is ACTIVE
+        :param in device:
+            zlgcan device number, eg: ZCAN_USBCANFD_100U.
+            
+        :param int/int list/int tuple channel:
+            The can channel. 
+            Default is 0.
 
         :param int bitrate:
-            Bitrate of channel in bit/s.
+            CAN bitrate (or nominal canfd bitrate) of channel in bit/s
             Default is 500 kbit/s.
+
+        :params int data_bitrate:
+            Datarate of channel in bit/s for CANFD.
+            Just for CANFD device.
+        
+        :param bool res_en:
+            Internal resistance enable.
+            This param is valid if device has internal resistance.
+
+        :param bool is_server:
+            TCP mode. TCP server is True, TCP client is False.
+            Just for TCP deivce, eg: ZCAN_CANETTCP, ZCAN_WIFICAN_TCP
+
+        :param int local_port:       
+            TCP/UDP local port.
+            Just for TCP/UDP device. 
+
+        :param str dst_ip:
+            TCP/UDP mode remote ip addr.
+            Just for TCP/UDP device. 
+
+        :param int dst_port:
+            TCP/UDP mode remote port.
+            Just for TCP/UDP device. 
         """
         super().__init__(channel=channel, **kwargs)
 
         if isinstance(channel, (list, tuple)):
-            self.channels = channel
+            channels = channel
         elif isinstance(channel, int):
-            self.channels = [channel]
+            channels = [channel]
         else:
             # Assume comma separated string of channels
-            self.channels = [int(ch.strip()) for ch in channel.split(",")]
+            channels = [int(ch.strip()) for ch in channel.split(",")]
 
         self.device = zcanlib.OpenDevice(device, device_index, 0)
         if self.device == INVALID_DEVICE_HANDLE:
             log.error("open device failed")
             return
 
-        self.is_fd_device = True
+        self.is_fd_device = self._dev_have_attr(device, "is_fd")
 
         self.chn_handles = {}
         ip = zcanlib.GetIProperty(self.device)
-        for chn in self.channels:
-            if self.is_fd_device:
-                #fixme 从设备列表检查是否支持该设备，该设备是否支持canfd
-                #fixme 波特率应查询是否在表内
-                #fixme 只有usbcanfd支持该命令
-                ret = zcanlib.SetValue(ip, str(chn) + "/canfd_abit_baud_rate", str(bitrate)) 
-                if ret != ZCAN_STATUS_OK:
-                    log.error("set nominal baudrate failed")
+        for chn in channels:
+            if not self._dev_have_attr(device, "is_net_dev"):
+                if self.is_fd_device:
+                    ret = zcanlib.SetValue(ip, str(chn) + "/canfd_abit_baud_rate", str(bitrate)) 
+                    if ret != ZCAN_STATUS_OK:
+                        log.error("set nominal baudrate failed")
 
-                #fixme canfd数据域波特率获取 
-                ret = zcanlib.SetValue(ip, str(chn) + "/canfd_dbit_baud_rate", str(bitrate)) 
-                if ret != ZCAN_STATUS_OK:
-                    log.error("set data baudrate failed")
-
-                #if "resistance_enable" 
-                ret = zcanlib.SetValue(ip, str(chn) + "/initenal_resistance", "1")
-            else:
-                ret = zcanlib.SetValue(ip, str(chn) + "/baud_rate", str(bitrate)) 
-                if ret != ZCAN_STATUS_OK:
-                    log.error("set baudrate failed")
+                    data_bitrate = kwargs["data_bitrate"] if "data_bitrate" in kwargs else bitrate
+                    ret = zcanlib.SetValue(ip, str(chn) + "/canfd_dbit_baud_rate", str(data_bitrate)) 
+                    if ret != ZCAN_STATUS_OK:
+                        log.error("set data baudrate failed")
+                else:
+                    ret = zcanlib.SetValue(ip, str(chn) + "/baud_rate", str(bitrate)) 
+                    if ret != ZCAN_STATUS_OK:
+                        log.error("set baudrate failed")
 
             chn_init_cfg = ZCAN_CHANNEL_INIT_CONFIG()
             if self.is_fd_device:
@@ -101,17 +156,47 @@ class ZlgcanBus(BusABC):
             if handle is None:
                 log.error("init channel%d failed" % chn) 
                 continue
+
+            if self._dev_have_attr(device, "is_net_dev"):
+                if self._dev_have_attr(device, "is_tcp"):
+                    if "is_server" in kwargs and \
+                        zcanlib.SetValue(ip, str(chn) + "/work_mode", 
+                                            "1" if kwargs["is_server"] else "0") != ZCAN_STATUS_OK: 
+                        raise ValueError("set work_mode attr failed or no work_mode attr.") 
+                if not kwargs["is_server"] and ("dst_ip" not in kwargs or "dst_port" not in kwargs):
+                    raise ValueError("net device have no ip or work_port attr.")
+
+                if "dst_ip" in kwargs and \
+                    zcanlib.SetValue(ip, str(chn) + "/ip", kwargs["dst_ip"]) != ZCAN_STATUS_OK:
+                    raise ValueError("set dst ip attr failed.")
+
+                if "dst_port" in kwargs and \
+                    zcanlib.SetValue(ip, str(chn) + "/work_port", str(kwargs["dst_port"])) != ZCAN_STATUS_OK:
+                    raise ValueError("set dst port attr failed.")
+
+                if "local_port" in kwargs and \
+                    zcanlib.SetValue(ip, str(chn) + "/local_port", \
+                        str(kwargs["local_port"])) != ZCAN_STATUS_OK:
+                    raise ValueError("set local port attr failed.")
+
             ret = zcanlib.StartCAN(handle)
             if ret != ZCAN_STATUS_OK:
                 log.error("start channel%d failed" % chn) 
                 continue
+            if self._dev_have_attr(device, "support_resistance") and "res_en" in kwargs:
+                ret = zcanlib.SetValue(ip, str(chn) + "/initenal_resistance", \
+                                            "1" if kwargs["res_en"] else "0")
+                if ret != ZCAN_STATUS_OK:
+                    log.error("set channel%d resistance failed" % chn) 
 
             self.chn_handles[chn] = handle 
 
         zcanlib.ReleaseIProperty(ip) 
 
-    def _can_dev_recv(self, timeout):
-        pass
+    def _dev_have_attr(self, device, attr):
+        return device in zcan_dev_property and \
+                attr in zcan_dev_property[device] \
+                    and zcan_dev_property[device][attr]
 
     def _recv_check(self):
         for chn, handle in self.chn_handles.items():
@@ -156,7 +241,6 @@ class ZlgcanBus(BusABC):
                 )
 
     def _recv_internal(self, timeout):
-        #return self._canfd_dev_recv(self, timeout) self.is_fd_device else self._can_dev_recv(self, timeout)
         end_time = time.perf_counter() + timeout if timeout else 0
         chn, is_rcv_canfd = self._recv_check()
         if chn:
@@ -189,28 +273,31 @@ class ZlgcanBus(BusABC):
                 td.frame.data[i] = msg.data[i]
         
         if len(self.chn_handles) == 0:
-            log.error("no channel to send") #fixme raise error
-            return
+            raise ValueError("no channel to send")
 
         handle = list(self.chn_handles.values())[0]
         if msg.channel is not None:
-            if self.chn_handles.has_key(msg.channel):
-                handle = self.chn_handles(chn)
+            if msg.channel in self.chn_handles:
+                handle = self.chn_handles[msg.channel]
             else:
-                log.error("no channel to send")
+                raise ValueError("no channel to send")
 
         ret = zcanlib.Transmit(handle, td, 1)
         if ret != 1:
-            log.error("send can frame failed") #fixme raise error
+            raise IOError("send can frame failed.") 
 
     def _canfd_send(self, msg, timeout):
         td = ZCAN_TransmitFD_Data()
         td.transmit_type = 0
+        td.frame.can_id = msg.arbitration_id
         td.frame.err = 0
         td.frame.rtr = 0
         td.frame.eff = 1 if msg.is_extended_id else 0
         td.frame.len = msg.dlc
         td.frame.brs = 1 if msg.bitrate_switch else 0
+
+        for i in range(msg.dlc):
+            td.frame.data[i] = msg.data[i]
 
         if len(self.chn_handles) == 0:
             log.error("no channel to send")
@@ -218,16 +305,14 @@ class ZlgcanBus(BusABC):
         
         handle = list(self.chn_handles.values())[0]
         if msg.channel is not None:
-            if self.chn_handles.has_key(msg.channel):
-                handle = self.chn_handles(chn)
+            if msg.channel in self.chn_handles:
+                handle = self.chn_handles[msg.channel]
             else:
                 log.error("no channel to send")
 
         ret = zcanlib.TransmitFD(handle, td, 1)
         if ret != 1:
-            log.error("send canfd frame failed")
-
-        zcanlib.TransmitFD(self.chn_handle, canfd_msg, 1)
+            raise IOError("send canfd frame failed.") 
 
     def send(self, msg, timeout=None):
         if msg.is_fd:
