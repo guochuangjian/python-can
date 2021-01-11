@@ -181,13 +181,12 @@ class ZlgcanBus(BusABC):
 
             ret = zcanlib.StartCAN(handle)
             if ret != ZCAN_STATUS_OK:
-                log.error("start channel%d failed" % chn) 
-                continue
+                raise IOError("start channel%d failed." % chn)
             if self._dev_have_attr(device, "support_resistance") and "res_en" in kwargs:
                 ret = zcanlib.SetValue(ip, str(chn) + "/initenal_resistance", \
                                             "1" if kwargs["res_en"] else "0")
                 if ret != ZCAN_STATUS_OK:
-                    log.error("set channel%d resistance failed" % chn) 
+                    raise ValueError("set channel%d resistance failed" % chn)
 
             self.chn_handles[chn] = handle 
 
