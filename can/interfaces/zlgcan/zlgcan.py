@@ -20,110 +20,127 @@ import platform
 INVALID_DEVICE_HANDLE = 0
 INVALID_CHANNEL_HANDLE = 0
 
-'''
+"""
  Device Type
-'''
-ZCAN_PCI5121          = 1
-ZCAN_PCI9810          = 2
-ZCAN_USBCAN1          = 3
-ZCAN_USBCAN2          = 4
-ZCAN_PCI9820          = 5
-ZCAN_CAN232           = 6
-ZCAN_PCI5110          = 7
-ZCAN_CANLITE          = 8
-ZCAN_ISA9620          = 9
-ZCAN_ISA5420          = 10
-ZCAN_PC104CAN         = 11
-ZCAN_CANETUDP         = 12
-ZCAN_CANETE           = 12
-ZCAN_DNP9810          = 13
-ZCAN_PCI9840          = 14
-ZCAN_PC104CAN2        = 15
-ZCAN_PCI9820I         = 16
-ZCAN_CANETTCP         = 17
-ZCAN_PCIE_9220        = 18
-ZCAN_PCI5010U         = 19
-ZCAN_USBCAN_E_U       = 20
-ZCAN_USBCAN_2E_U      = 21
-ZCAN_PCI5020U         = 22
-ZCAN_EG20T_CAN        = 23
-ZCAN_PCIE9221         = 24
-ZCAN_WIFICAN_TCP      = 25
-ZCAN_WIFICAN_UDP      = 26
-ZCAN_PCIe9120         = 27
-ZCAN_PCIe9110         = 28
-ZCAN_PCIe9140         = 29
-ZCAN_USBCAN_4E_U      = 31
-ZCAN_CANDTU_200UR     = 32
-ZCAN_CANDTU_MINI      = 33
-ZCAN_USBCAN_8E_U      = 34
-ZCAN_CANREPLAY        = 35
-ZCAN_CANDTU_NET       = 36
-ZCAN_CANDTU_100UR     = 37
-ZCAN_PCIE_CANFD_100U  = 38
-ZCAN_PCIE_CANFD_200U  = 39
-ZCAN_PCIE_CANFD_400U  = 40
-ZCAN_USBCANFD_200U    = 41
-ZCAN_USBCANFD_100U    = 42
-ZCAN_USBCANFD_MINI    = 43
-ZCAN_CANFDCOM_100IE   = 44
-ZCAN_CANSCOPE         = 45
-ZCAN_CLOUD            = 46
-ZCAN_CANDTU_NET_400   = 47
-ZCAN_CANFDNET_TCP     = 48
-ZCAN_CANFDNET_UDP     = 49
-ZCAN_CANFDWIFI_TCP    = 50
-ZCAN_CANFDWIFI_UDP    = 51
+"""
+ZCAN_PCI5121 = 1
+ZCAN_PCI9810 = 2
+ZCAN_USBCAN1 = 3
+ZCAN_USBCAN2 = 4
+ZCAN_PCI9820 = 5
+ZCAN_CAN232 = 6
+ZCAN_PCI5110 = 7
+ZCAN_CANLITE = 8
+ZCAN_ISA9620 = 9
+ZCAN_ISA5420 = 10
+ZCAN_PC104CAN = 11
+ZCAN_CANETUDP = 12
+ZCAN_CANETE = 12
+ZCAN_DNP9810 = 13
+ZCAN_PCI9840 = 14
+ZCAN_PC104CAN2 = 15
+ZCAN_PCI9820I = 16
+ZCAN_CANETTCP = 17
+ZCAN_PCIE_9220 = 18
+ZCAN_PCI5010U = 19
+ZCAN_USBCAN_E_U = 20
+ZCAN_USBCAN_2E_U = 21
+ZCAN_PCI5020U = 22
+ZCAN_EG20T_CAN = 23
+ZCAN_PCIE9221 = 24
+ZCAN_WIFICAN_TCP = 25
+ZCAN_WIFICAN_UDP = 26
+ZCAN_PCIe9120 = 27
+ZCAN_PCIe9110 = 28
+ZCAN_PCIe9140 = 29
+ZCAN_USBCAN_4E_U = 31
+ZCAN_CANDTU_200UR = 32
+ZCAN_CANDTU_MINI = 33
+ZCAN_USBCAN_8E_U = 34
+ZCAN_CANREPLAY = 35
+ZCAN_CANDTU_NET = 36
+ZCAN_CANDTU_100UR = 37
+ZCAN_PCIE_CANFD_100U = 38
+ZCAN_PCIE_CANFD_200U = 39
+ZCAN_PCIE_CANFD_400U = 40
+ZCAN_USBCANFD_200U = 41
+ZCAN_USBCANFD_100U = 42
+ZCAN_USBCANFD_MINI = 43
+ZCAN_CANFDCOM_100IE = 44
+ZCAN_CANSCOPE = 45
+ZCAN_CLOUD = 46
+ZCAN_CANDTU_NET_400 = 47
+ZCAN_CANFDNET_TCP = 48
+ZCAN_CANFDNET_UDP = 49
+ZCAN_CANFDWIFI_TCP = 50
+ZCAN_CANFDWIFI_UDP = 51
 ZCAN_CANFDNET_400U_TCP = 52
 ZCAN_CANFDNET_400U_UDP = 53
 ZCAN_CANFDBLUE_200U = 54
 ZCAN_VIRTUAL_DEVICE = 99
 
-'''
+"""
  Interface return status
-'''
+"""
 ZCAN_STATUS_ERR = 0
 ZCAN_STATUS_OK = 1
 ZCAN_STATUS_ONLINE = 2
 ZCAN_STATUS_OFFLINE = 3
 ZCAN_STATUS_UNSUPPORTED = 4
 
-'''
+"""
  CAN type
-'''
+"""
 ZCAN_TYPE_CAN = 0
 ZCAN_TYPE_CANFD = 1
 
 
-'''
+"""
  Device information
-'''
+"""
+
+
 class ZCAN_DEVICE_INFO(Structure):
-    _fields_ = [("hw_Version", c_ushort),
-                ("fw_Version", c_ushort),
-                ("dr_Version", c_ushort),
-                ("in_Version", c_ushort),
-                ("irq_Num", c_ushort),
-                ("can_Num", c_ubyte),
-                ("str_Serial_Num", c_ubyte * 20),
-                ("str_hw_Type", c_ubyte * 40),
-                ("reserved", c_ushort * 4)]
+    _fields_ = [
+        ("hw_Version", c_ushort),
+        ("fw_Version", c_ushort),
+        ("dr_Version", c_ushort),
+        ("in_Version", c_ushort),
+        ("irq_Num", c_ushort),
+        ("can_Num", c_ubyte),
+        ("str_Serial_Num", c_ubyte * 20),
+        ("str_hw_Type", c_ubyte * 40),
+        ("reserved", c_ushort * 4),
+    ]
 
     def __str__(self):
-        return "Hardware Version:%s\n\
+        return (
+            "Hardware Version:%s\n\
                 Firmware Version:%s\n\
                 Driver Interface:%s\n\
                 Interface Interface:%s\n\
                 Interrupt Number:%d\n\
                 CAN Number:%d\n\
                 Serial:%s\n\
-                Hardware Type:%s\n" %( \
-                self.hw_version, self.fw_version, self.dr_version, self.in_version, \
-                self.irq_num, self.can_num, self.serial, self.hw_type)
+                Hardware Type:%s\n"
+            % (
+                self.hw_version,
+                self.fw_version,
+                self.dr_version,
+                self.in_version,
+                self.irq_num,
+                self.can_num,
+                self.serial,
+                self.hw_type,
+            )
+        )
 
     @staticmethod
     def int2version(version):
-        return ("V%02x.%02x" if version // 0xFF >= 9 else "V%d.%02x") % (version // 0xFF, version & 0xFF)
+        return ("V%02x.%02x" if version // 0xFF >= 9 else "V%d.%02x") % (
+            version // 0xFF,
+            version & 0xFF,
+        )
 
     @property
     def hw_version(self):
@@ -154,7 +171,7 @@ class ZCAN_DEVICE_INFO(Structure):
         serial = ""
         for c in self.str_Serial_Num:
             if c > 0:
-               serial += chr(c)
+                serial += chr(c)
             else:
                 break
         return serial
@@ -216,39 +233,48 @@ class ZCAN_CHANNEL_ERR_INFO(Structure):
 
 
 class ZCAN_CHANNEL_STATUS(Structure):
-    _fields_ = [("errInterrupt", c_ubyte),
-                ("regMode",      c_ubyte),
-                ("regStatus",    c_ubyte),
-                ("regALCapture", c_ubyte),
-                ("regECCapture", c_ubyte),
-                ("regEWLimit",   c_ubyte),
-                ("regRECounter", c_ubyte),
-                ("regTECounter", c_ubyte),
-                ("Reserved",     c_ubyte)]
+    _fields_ = [
+        ("errInterrupt", c_ubyte),
+        ("regMode", c_ubyte),
+        ("regStatus", c_ubyte),
+        ("regALCapture", c_ubyte),
+        ("regECCapture", c_ubyte),
+        ("regEWLimit", c_ubyte),
+        ("regRECounter", c_ubyte),
+        ("regTECounter", c_ubyte),
+        ("Reserved", c_ubyte),
+    ]
+
 
 class ZCAN_CAN_FRAME(Structure):
-    _fields_ = [("can_id",  c_uint, 29),
-                ("err",     c_uint, 1),
-                ("rtr",     c_uint, 1),
-                ("eff",     c_uint, 1),
-                ("can_dlc", c_ubyte),
-                ("__pad",   c_ubyte),
-                ("__res0",  c_ubyte),
-                ("__res1",  c_ubyte),
-                ("data",    c_ubyte * 8)]
+    _fields_ = [
+        ("can_id", c_uint, 29),
+        ("err", c_uint, 1),
+        ("rtr", c_uint, 1),
+        ("eff", c_uint, 1),
+        ("can_dlc", c_ubyte),
+        ("__pad", c_ubyte),
+        ("__res0", c_ubyte),
+        ("__res1", c_ubyte),
+        ("data", c_ubyte * 8),
+    ]
+
 
 class ZCAN_CANFD_FRAME(Structure):
-    _fields_ = [("can_id", c_uint, 29),
-                ("err",    c_uint, 1),
-                ("rtr",    c_uint, 1),
-                ("eff",    c_uint, 1),
-                ("len",    c_ubyte),
-                ("brs",    c_ubyte, 1),
-                ("esi",    c_ubyte, 1),
-                ("__res",  c_ubyte, 6),
-                ("__res0", c_ubyte),
-                ("__res1", c_ubyte),
-                ("data",   c_ubyte * 64)]
+    _fields_ = [
+        ("can_id", c_uint, 29),
+        ("err", c_uint, 1),
+        ("rtr", c_uint, 1),
+        ("eff", c_uint, 1),
+        ("len", c_ubyte),
+        ("brs", c_ubyte, 1),
+        ("esi", c_ubyte, 1),
+        ("__res", c_ubyte, 6),
+        ("__res0", c_ubyte),
+        ("__res1", c_ubyte),
+        ("data", c_ubyte * 64),
+    ]
+
 
 class ZCAN_Transmit_Data(Structure):
     _fields_ = [("frame", ZCAN_CAN_FRAME), ("transmit_type", c_uint)]
@@ -285,9 +311,12 @@ class ZCANFD_AUTO_TRANSMIT_OBJ(Structure):
 
 
 class IProperty(Structure):
-    _fields_ = [("SetValue", c_void_p),
-                ("GetValue", c_void_p),
-                ("GetPropertys", c_void_p)]
+    _fields_ = [
+        ("SetValue", c_void_p),
+        ("GetValue", c_void_p),
+        ("GetPropertys", c_void_p),
+    ]
+
 
 class ZCAN:
     def __init__(self):
@@ -406,7 +435,7 @@ class ZCAN:
             print("Exception on ZCAN_TransmitFD!")
             raise
 
-    def ReceiveFD(self, chn_handle, rcv_num, wait_time = c_int(-1)):
+    def ReceiveFD(self, chn_handle, rcv_num, wait_time=c_int(-1)):
         try:
             rcv_canfd_msgs = (ZCAN_ReceiveFD_Data * rcv_num)()
             ret = self.__dll.ZCAN_ReceiveFD(
